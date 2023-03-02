@@ -1,0 +1,120 @@
+
+create or replace procedure asOnDate(accnum int,tdate date,in out amnt numeric)
+as $$
+declare
+cr cursor for select tr_type,tr_amount from aktrans where tr_date>=tdate and accnum=accno order by tr_date desc;
+typeb varchar(20);
+bal int;
+begin
+open cr;
+amnt=(select currentbal from akacc where accnum=accno );
+loop
+fetch cr into typeb,bal ;
+exit when not found;
+if typeb='Withdraw' then
+amnt=amnt+bal;
+else
+amnt=amnt-bal;
+end if;
+end loop;
+close cr;
+end $$ language plpgsql;
+
+
+
+
+
+create or replace procedure minBal(accnum int,tdate date,in out mini   int)
+as $$ 
+declare
+cus cursor for select tr_type,tr_amount,tr_date from aktrans where accnum=accno and 
+extract(day from tr_date)>=10 and extract(month from tr_date)=extract(month from tdate) and 
+extract(year from tr_date)=extract(year from tdate) order by tr_date desc;
+val numeric(10,2);
+tname varchar(20);
+amnt numeric(10,2):=0;
+x date;
+begin
+open cus;
+x:=(select tr_date from  aktrans where accnum=accno and 
+extract(day from tr_date)>=10 and extract(month from tr_date)=extract(month from tdate) and 
+extract(year from tr_date)=extract(year from tdate) order by tr_date desc limit 1);
+call asOnDate(accnum,x,amnt);
+mini:=amnt;
+
+loop
+fetch cus into tname,val;
+exit when not found;
+if(tname='Withdraw') then
+amnt:=amnt+val;
+else
+amnt:=amnt-val;
+end if;
+if mini>amnt then
+mini:=amnt;
+end if;
+end loop;
+raise notice 'the min amount is %',mini;
+close cus;
+end $$ language plpgsql;
+
+
+create or replace procedure accInterest(accnum int,in out i numeric)
+as $$
+declare
+xdate date:=current_date;
+x  date:=current_date-interval '6 months';
+ab date;
+mini int;
+opend date:=(select op_date from akacc where accno=accnum);
+begin
+
+if opend<=x then
+loop
+exit when x>=xdate;
+call minBal(accnum,x,mini) ;
+
+i:=i+(mini*(0.083)*(1.2))/100;
+x:=x+interval '1 month';
+end loop;
+
+else
+if extract(day from opend)>10 then
+ab:=opend+interval '1 month';
+end if;
+loop
+exit when ab>=xdate;
+call minBal(accnum,ab,mini);
+i:=i+(mini*(0.083)*(1.2))/100;
+ab:=ab+interval '1 month';
+end loop;
+end if;
+raise notice 'the accumulated interst amount is %',i;
+end $$ language plpgsql;
+
+
+
+
+create or replace procedure EveryAcc()
+as $$
+declare 
+curs cursor for select accno from akacc;
+acc int;
+i numeric:=0;
+begin
+if extract(month from current_date) not in(3,9) then
+return;
+else
+open curs;
+loop
+fetch curs into acc;
+exit when not found;
+call accInterest(acc,i);
+update akacc set currentbal=currentbal+i where accno=acc;
+raise notice 'acculumated interst %',i;
+end loop;
+end if;
+end $$ language plpgsql;
+
+
+call EveryAcc()
