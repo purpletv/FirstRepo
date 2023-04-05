@@ -2,40 +2,36 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.Scanner;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 
 
 public class SelectSimulation {
 
-	public static void main(String[] args) throws ClassNotFoundException, FileNotFoundException, NoSuchFieldException,
-			SecurityException, IllegalArgumentException, IllegalAccessException {
+	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		EmployeeList el = new EmployeeList();
 		ParseFile.parse("./Employehub.csv");
 		ParseFile.read(el);
-		//for (Employee e : el)
-		//	System.out.println(e);
 		Class EmpDes = Class.forName("Employee");
-		// Method m[] = new Method[args.length];
-		String exp[];
-		Field field[] = new Field[args.length];
+		Method m[] = new Method[args.length];
+		String exp[] = new String[3];
+		String field[] = new String[args.length];
 		String con[] = new String[args.length];
 		String value[] = new String[args.length];
-		//System.out.print(args[0]);
 		for (int i = 0; i < args.length; i++) {
-			
 			exp = args[i].split("\\.", 0);
-			field[i] = EmpDes.getField(exp[0]);
+			field[i] = exp[0];
 			con[i] = exp[1];
 			value[i] = exp[2];
 
 		}
+		for(int i=0;i<args.length;i++)
+			m[i]=EmpDes.getDeclaredMethod("get"+field[i]);
 		for (Employee e : el) {
 			boolean f = true;
 			for (int i = 0; i < args.length && f; i++) {
-				// f=(m[i].invoke(e) > value[i]);
-				//System.out.print(field[i].get(e));
-				f = field[i].get(e).toString().compareTo(value[i]) == 0;
+				f=(m[i].invoke(e).toString().compareTo(value[i]) == 0);
+				//f = field[i].get(e).toString().compareTo(value[i]) == 0;
 			}
 			if (f)
 				System.out.println(e);
@@ -46,9 +42,9 @@ public class SelectSimulation {
 }
 
 class Employee {
-	public int id;
+	 int id;
 	String name, email, phone, hiredate, job_id;
-	public int salary;
+	 int salary;
 	int commision;
 	int manager;
 	int dept_id;
@@ -95,43 +91,43 @@ class Employee {
 		return new Employee(id, name, email, phn, hd, job_id, sal, commision, mid, dept_id);
 
 	}
-	public int getId() {
+	public int getid() {
 		return id;
 	}
 
-	public String getName() {
+	public String getname() {
 		return name;
 	}
 
-	public String getEmail() {
+	public String getemail() {
 		return email;
 	}
 
-	public String getPhone() {
+	public String getphone() {
 		return phone;
 	}
 
-	public String getHiredate() {
+	public String gethiredate() {
 		return hiredate;
 	}
 
-	public String getJob_id() {
+	public String getjob_id() {
 		return job_id;
 	}
 
-	public int getSalary() {
+	public int getsalary() {
 		return salary;
 	}
 
-	public int getCommision() {
+	public int getcommision() {
 		return commision;
 	}
 
-	public int getManager() {
+	public int getmanager() {
 		return manager;
 	}
 
-	public int getDept_id() {
+	public int getdept_id() {
 		return dept_id;
 	}
 
