@@ -10,8 +10,7 @@ public class SelectSimulation {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		EmployeeList el = new EmployeeList();
-		ParseFile.parse("./Employehub.csv");
-		ParseFile.read(el);
+		ParseFile.read("./Employehub.csv",el);
 		Class EmpDes = Class.forName("Employee");
 		Method m[] = new Method[args.length];
 		String exp[] = new String[3];
@@ -133,7 +132,7 @@ class Employee {
 
 	@Override
 	public String toString() {
-		return "Employee [id=" + id + ", name=" + name + ", email=" + email + ", phone=" + phone + ", hiredate="
+		return "[id=" + id + ", name=" + name + ", email=" + email + ", phone=" + phone + ", hiredate="
 				+ hiredate + ", job_id=" + job_id + ", salary=" + salary + ", commision=" + commision + ", manager="
 				+ manager + ", dept_id=" + dept_id + "]";
 	}
@@ -147,19 +146,14 @@ class ParseFile {
 	static File file;
 	static Scanner sc;
 
-	public static void parse(String path) throws FileNotFoundException {
+	public static void read(String path,EmployeeList el) throws FileNotFoundException{
 		file = new File(path);
 		sc = new Scanner(file);
-
-	}
-
-	public static void read(EmployeeList el) {
-		String record;
 		sc.nextLine();
 		while (sc.hasNextLine()) {
-			record=sc.nextLine();
-			el.add(Employee.createObject(record));
+			el.add(Employee.createObject(sc.nextLine()));
 		}
 	}
 
 }
+
